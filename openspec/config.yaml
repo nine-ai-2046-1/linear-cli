@@ -1,0 +1,29 @@
+schema: spec-driven
+
+context: |
+  Project: linear-cli (located in ./linear-cli).
+  Runtime & Stack: Node.js 20+/22+, TypeScript 5.x (ESM), @linear/sdk ^104.0.0, Commander.js, Vitest.
+  Core Constraints:
+  - Installed globally as `linear`, but authentication is strictly per-working-directory (`<cwd>/.linear/auth.json`).
+  - Never traverse parent directories or fall back to a global Linear credential when resolving authentication.
+  - Secrets (API keys, OAuth access/refresh tokens, client secrets) default to OS Keychain (`security` CLI on macOS) keyed by canonical folder hash + binding ID, with optional explicit `--storage file` (`0600` permissions) for headless environments. Secrets must never be logged or echoed in JSON/stdout/stderr.
+  - Support both `--json` deterministic machine-readable output on stdout and human-readable output when `--json` is omitted; diagnostics/errors go to stderr with deterministic exit codes.
+  - Non-interactive mode (`--non-interactive` or non-TTY) must never hang on prompts; fail fast with `AUTH_REQUIRED` or `VALIDATION_ERROR`.
+  - Respect Linear 429 / RATELIMITED with bounded Retry-After backoff on reads/idempotent ops; never blindly retry create mutations after network timeout (fail with `OUTCOME_UNKNOWN`).
+  - Keep changes modular under `src/core/`, `src/auth/`, `src/cli/`, and `src/modules/<domain>/`, with comprehensive Vitest unit and CLI execution tests under `tests/`.
+
+rules:
+  proposal:
+    - Clearly state scope, capabilities covered, and out-of-scope boundaries.
+  specs:
+    - Every requirement must use SHALL/MUST and include concrete, testable scenarios (happy path, error/edge cases, non-interactive/JSON behavior).
+  design:
+    - Include ASCII architecture or data-flow diagrams and specify module file boundaries and error codes.
+  tasks:
+    - Include unit test and CLI integration test tasks for every command group, plus verification report generation.
+
+operations:
+  apply:
+    guidance:
+      - Run `npm run typecheck` and `npm test` before marking test tasks complete.
+      - Never leave placeholder stubs that fake mutation success.
